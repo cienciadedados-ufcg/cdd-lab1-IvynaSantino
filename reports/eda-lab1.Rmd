@@ -1,5 +1,5 @@
 ---
-title: "EDA Análise de séries"
+title: "Análise descritiva de seriados"
 output:
   html_document:
     df_print: paged
@@ -16,7 +16,9 @@ library(here)
 theme_set(theme_bw())
 ```
 
-## Primeiramente, iremos carregar os dados das séries e filtrar as que queremos analisar. 
+Esta análise é feita através de dados fornecidos pelo IMDB sobre seriados até o ano de 2017. Para mais informações consulte este repositório: adiciona link a repositório!
+
+De início, iremos carregar os dados das séries e filtrar as que queremos analisar. 
 
 ```{r}
 poucas_temp = read.csv(here("data/series_from_imdb-all.csv")) %>% 
@@ -31,12 +33,9 @@ poucas_temp = read.csv(here("data/series_from_imdb-all.csv")) %>%
 poucas_temp %>% 
     mutate(Séries = series_name) %>% 
     group_by(Séries) %>% 
-    mutate(Temporadas = max(season)) %>% 
-    select(Séries, Temporadas) %>% 
+    summarise(Avaliação_média = mean(UserRating), Temporadas = max(season)) %>% 
+    select(Séries, Temporadas, Avaliação_média) %>% 
     unique()
-    
-
-# Mostrar a quantidade de temporadas em cada série
 ```
 
 As séries listadas foram escolhidas com o critério de similaridade ao número de temporadas e da quantidade
@@ -48,11 +47,10 @@ Dessa forma, agora vamos fazer algumas observações sobre os gráficos e respon
 
 Antes das observações serem feitas, é válido explicar um pouco cada conceito das análises que serão feitas com as séries:
 
-- Média: é a soma dos valores dos dados de um conjunto dividido pelo número de dados constante nesse conjunto.
-- Mediana: é o valor que medeia os valores presentes num conjunto ordenado numericamente.
-- Desvio padrão:
-- IQR:
-- Bloxplot:
+    - Média: é a soma dos valores dos dados de um conjunto dividido pelo número de dados constante nesse conjunto.
+    - Mediana: é o valor que medeia os valores presentes num conjunto ordenado numericamente.
+    - Desvio padrão: são medidas que dão uma ideia da dispersão de uma distribuição de dados, ou seja, valores altos indicam que os valores observados tendem a estar distantes da média, o inverso para valores baixos.
+    - IQR: avalia a dispersão de dados somente depois de ordená-los em ordem crescente.
 
 ##Quantidade de avaliações pelo IMDB
 
@@ -77,7 +75,7 @@ O gráfico abaixo mostra as notas que cada episódio obteve nos seriados ao long
 observar que a maioria possui resultados entre o intervalo 8 a 9 nas avaliações. Citamos novamente a série Arrow, por obter algumas notas fora da concentração de pontos. Isto significa que em alguns episódios não corresponderam as
 expectativas do público que avaliou a pesquisa.
 
-###Questionamento: Quem é mais concentrada? American ou as outras restantes?
+###Questionamento: Quem é mais concentrada? E a menos?
 ```{r}
 # usando a nota de avaliação
 poucas_temp %>%
@@ -87,7 +85,7 @@ poucas_temp %>%
     geom_jitter(width = .2, alpha = .7) +
     ggtitle("Distribuição das avaliações dos episódios") +
     ylim(5, 10) +
-    labs(x = "Episódios", y = "Notas")
+    labs(x = "Episódios", y = "Avaliação")
 ```
 Podemos observar que American Horror Story possui a maior concentração de notas. Já Arrow é o inverso, recebeu notas mais distantes entre o valor médio.
 
@@ -122,17 +120,16 @@ poucas_temp %>%
               Média = mean(UserRating),
               Mediana = median(UserRating),
               Desvio_padrão = sd(UserRating))
-    
-    
-
 ```
+
+De acordo com os resultados acima, podemos ver que House of Cards possui a maior média de avaliações dos usuários, com aproximadamente 8,7, logo atrás está Arrow, com 8,5, uma diferença de 0,2 que não é uma grande diferença. Mas o que vale ressaltar dessas duas séries são os valores da mediana e do desvio padrão. A mediana que em ambas são iguais e próximas das médias, ou seja, bla bla. No entanto, no desvio padrão, principalmente de Arrow, está mais próximo de 1, ou seja, há muitas avaliações que estão longe das medidas centrais. Já Vikings, possui desvio padrão baixo e média próxima da mediana, justamente o caso inverso de Arrow, dessa forma podemos concluir que a série possui avaliações próximas das medidas centrais.
 
 ## Qual episódio mais bem avaliado?
 
 ``` {r}
 poucas_temp %>%
-    mutate(Série = series_name, Episódio = Episode, Avaliação = UserRating) %>%
-    select(Série, Episódio, Avaliação, season) %>%
+    mutate(Série = series_name, Episódio = Episode, Avaliação = UserRating, Temporada = season) %>%
+    select(Série, Episódio, Avaliação, Temporada) %>%
     filter(Avaliação == max(Avaliação))
 ```
 Um dos fatos curiosos é que o episódio mais bem avaliado é Lian Yu - Arrow e é justamente o episódio final da quinta temporada, que por sua vez, é a temporada mais bem avaliada.
@@ -140,35 +137,35 @@ Um dos fatos curiosos é que o episódio mais bem avaliado é Lian Yu - Arrow e 
 ## Qual episódio mais mal avaliado?
 ``` {r}
 poucas_temp %>%
-    mutate(Série = series_name, Episódio = Episode, Avaliação = UserRating) %>%
-    select(Série, Episódio, Avaliação, season) %>%
+    mutate(Série = series_name, Episódio = Episode, Avaliação = UserRating, Temporada = season) %>%
+    select(Série, Episódio, Avaliação, Temporada) %>%
     filter(Avaliação == min(Avaliação))
 ```
 O menos avaliado também pertence ao seriado Arrow e quarta temporada(mais mal avaliada das temporadas da série). Será uma relação de amor e ódio na série Arrow? 
 
-## Amor e ódio andam juntos?
+O gráfico abaixo mostra justamente essa relação de amor e ódio entre as temporadas de Arrow:
 
 ```{r}
 
 poucas_temp =  poucas_temp %>%
     
     mutate(
-        rank_odiados = row_number(r1), # maior = mais odiado
-        rank_amados = row_number(r10), # maior = mais amado
-        amado_odiado = rank_amados * rank_odiados) # maior = mais amado E odiado
+        rank_odiados = row_number(r1), 
+        rank_amados = row_number(r10), 
+        amado_odiado = rank_amados * rank_odiados) 
     
 poucas_temp %>%
     filter(series_name == "Arrow") %>%
-    ggplot(aes(x = r1,y = r10, color = season,
+    mutate(Nota_1 = r1, Nota_10 = r10, Temporada = season) %>% 
+    ggplot(aes(x = Nota_1,y = Nota_10, color = Temporada,
         size = amado_odiado,
         label = season_ep)) +
     geom_point(alpha = .5) +
+    ggtitle("Episódios amados e odiados de Arrow") +
     geom_text(nudge_x = .001, nudge_y = -.01)
 ```
 
 Das quatro séries analisadas, observamos que Arrow possui uma relação de amor e ódio ao decorrer de seus episódios, pois vimos que dentre esse conjunto de avaliações o episódio mais bem e menos avaliado pertence ao seu conjunto de dados, com notas máxima 9,9 e mínima 5,6, aos episódios Lian Yu(5 temporada - mais bem avaliada) e Schrim(4 temporada - mais mal avaliada).   
-
-Com exposição dos dados, podemos observar que a série mais bem e mal avaliada é X e Y, respectivamente. Com diferença de cerca Z na avaliação dos usuários. 
 
 Outro questionamento que podemos fazer é, qual das séries que você escolheu tem episódios de qualidade mais irregular segundo o IMDB? A diferença é grande? Pequena?
 
@@ -247,8 +244,7 @@ poucas_temp %>%
     xlab("Séries") +
     ylab("Avaliação")
 ```
-A partir da observação do número de votos, assim como na avaliação, Vikings obteve também crescimento no número de votos, principalmente na quarta temporada. Por outro lado, para House of Cards esse número caiu na terceira e quarta temporada, mas não caiu na avaliação. 
 
-### Conclusão
+A partir da observação do número de votos, assim como na avaliação, Vikings obteve também crescimento no número de votos, principalmente na quarta temporada. Por outro lado, para House of Cards esse número caiu na terceira e quarta temporada, mas não caiu na avaliação. 
 
 Dessa forma, podemos ver que a série House of Cards possui irregularidade da avaliação dos usuários com os passar dos episódios, já que possui oscilações frequentes no gráfico, existindo intervalos entre os pontos com cerca de 1,4 e no número de votos também há diferenças consideráveis, com cerca de 2200 votos, ocorrendo entre a segunda e terceira temporada. Arrow por sua vez, demostra ser a série mais regular entre as analisadas, já que não possui diferenças de oscilações pequenas ao longo dos episódios. E para regularidade de votos American Horror Story e Vikings são boas candidatas, já que possuem pequenas oscilações no número de votos, com oscilações máximas de aproximadamente 2000 e 1000 votos, respectivamente
