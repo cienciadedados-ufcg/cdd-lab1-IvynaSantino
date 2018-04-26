@@ -28,10 +28,13 @@ poucas_temp = read.csv(here("data/series_from_imdb-all.csv")) %>%
 
 
 ```{r}
-poucas_temp %>%
-    mutate(Séries = series_name, Temporadas = season) %>%
-    select(Séries, Temporadas) %>%
+poucas_temp %>% 
+    mutate(Séries = series_name) %>% 
+    group_by(Séries) %>% 
+    mutate(Temporadas = max(season)) %>% 
+    select(Séries, Temporadas) %>% 
     unique()
+    
 
 # Mostrar a quantidade de temporadas em cada série
 ```
@@ -45,20 +48,17 @@ Dessa forma, agora vamos fazer algumas observações sobre os gráficos e respon
 
 Antes das observações serem feitas, é válido explicar um pouco cada conceito das análises que serão feitas com as séries:
 
-- Média:
-- Mediana:
-- Percentil:
-- Mínimo:
-- Concentração:
-- Dispersão:
+- Média: é a soma dos valores dos dados de um conjunto dividido pelo número de dados constante nesse conjunto.
+- Mediana: é o valor que medeia os valores presentes num conjunto ordenado numericamente.
+- Desvio padrão:
 - IQR:
+- Bloxplot:
 
 ##Quantidade de avaliações pelo IMDB
 
 Com o bloxplot, podemos observar que os seriados possuem uma quantidade de votos concentrada em regiões próximas
 a sua mediana. Alguns pontos ficaram fora do bloxplot, significa dizer que obteve quantidade de avaliações tanto abaixo, como acima dos quartis. Podemos observar claramente isto no seriado Arrow, com alguns pontos registrados bem acima do ponto de concentração dos votos, mostrando que alguns episódios houveram uma maior ou menor quantidade de avaliações. Já em American Horror Story, observamos uma concentração maior dos pontos no bloxplot, indicando a similaridade da quantidade de votos em cada episódio.
 
-Obs.: Explicar sucintamente o que é bloxplot!
 ```{r}
 poucas_temp %>%
     mutate(Séries = series_name) %>%
@@ -74,20 +74,22 @@ poucas_temp %>%
 ##Distribuição das avaliações dos episódios
 
 O gráfico abaixo mostra as notas que cada episódio obteve nos seriados ao longo das temporadas e com isso, podemos 
-observar que a maioria possui resultados entre o intervalo 7 a 9 nas avaliações. Citamos novamente a série Arrow, por obter algumas notas fora da concentração de pontos. Isto significa que em alguns episódios não corresponderam as
+observar que a maioria possui resultados entre o intervalo 8 a 9 nas avaliações. Citamos novamente a série Arrow, por obter algumas notas fora da concentração de pontos. Isto significa que em alguns episódios não corresponderam as
 expectativas do público que avaliou a pesquisa.
 
-Questionamento: Quem é mais concentrada? American ou as outras restantes?
+###Questionamento: Quem é mais concentrada? American ou as outras restantes?
 ```{r}
 # usando a nota de avaliação
 poucas_temp %>%
     mutate(Séries = series_name) %>%
     ggplot(aes(x = series_name, y = UserRating, color = Séries)) +
-    geom_jitter(width = .4) +
+    geom_boxplot(width = .5) +
+    geom_jitter(width = .2, alpha = .7) +
     ggtitle("Distribuição das avaliações dos episódios") +
     ylim(5, 10) +
     labs(x = "Episódios", y = "Notas")
 ```
+Podemos observar que American Horror Story possui a maior concentração de notas. Já Arrow é o inverso, recebeu notas mais distantes entre o valor médio.
 
 ## Avaliações ao longo do tempo por temporada
 
@@ -103,22 +105,24 @@ poucas_temp %>%
     ylab("Avaliação")
 ```
 
-De acordo com o passar das temporadas, avaliação das séries observadas está no intervalo de notas entre 7,5 e 9,5.
-No entanto, na quarta temporada de Arrow há uma queda brusca nas notas do público. Qual será o motivo do decaimento dessas notas? E na temporada posterior, o porquê do crescimento das notas? Google pesquisar :)
+Com o passar das temporadas, avaliação das séries observadas está no intervalo de notas entre 7,5 e 9,5.
+No entanto, Arrow em sua quarta temporada há uma queda brusca nas notas do público. 
 
+### Qual será o motivo do decaimento dessas notas? E na temporada posterior, o porquê do crescimento das notas? 
+Admito que não sou uma fã da série, mas a maioria das críticas e reclamações a esta temporada está na perda da identidade da série e falta de criatividade com relação ao passar dos episódios. Mas posteriormente, na quinta temporada as notas voltam a subir e, inclusive, ser a temporada mais bem avaliada, com um dos motivos serem a volta de aspectos das primeiras temporadas que conquistaram o público.
 
 ## Dados estatísticos de cada seriado
 
 ```{r}
-# Mostrar numa tabela
-sumarios = poucas_temp %>% 
-    summarise(mediana = median(UserRating), 
-              media = mean(UserRating))
-poucas_temp %>%
-    ggplot(aes(x = UserRating)) + 
-    geom_histogram(binwidth = .5, fill = "white", color = "black") + 
-    geom_vline(xintercept = sumarios$media, color = "darkorange") + 
-    geom_vline(xintercept = sumarios$mediana, color = "brown") 
+poucas_temp %>% 
+    mutate(Série = series_name) %>% 
+    group_by(Série) %>% 
+    summarise(Máximo = max(UserRating),
+              Mínimo = min(UserRating),
+              Média = mean(UserRating),
+              Mediana = median(UserRating),
+              Desvio_padrão = sd(UserRating))
+    
     
 
 ```
@@ -126,117 +130,125 @@ poucas_temp %>%
 ## Qual episódio mais bem avaliado?
 
 ``` {r}
-# mudar os nomes dos títulos
 poucas_temp %>%
-    select(series_name, Episode, UserRating) %>%
-    filter(UserRating == max(UserRating))
+    mutate(Série = series_name, Episódio = Episode, Avaliação = UserRating) %>%
+    select(Série, Episódio, Avaliação, season) %>%
+    filter(Avaliação == max(Avaliação))
 ```
-
+Um dos fatos curiosos é que o episódio mais bem avaliado é Lian Yu - Arrow e é justamente o episódio final da quinta temporada, que por sua vez, é a temporada mais bem avaliada.
 
 ## Qual episódio mais mal avaliado?
 ``` {r}
-# mudar os nomes dos títulos
 poucas_temp %>%
     mutate(Série = series_name, Episódio = Episode, Avaliação = UserRating) %>%
-    select(series_name, Episode, UserRating) %>%
-    filter(UserRating == min(UserRating))
+    select(Série, Episódio, Avaliação, season) %>%
+    filter(Avaliação == min(Avaliação))
 ```
-Comentário: Será uma relação de amor e ódio na série Arrow?
+O menos avaliado também pertence ao seriado Arrow e quarta temporada(mais mal avaliada das temporadas da série). Será uma relação de amor e ódio na série Arrow? 
 
-## Plot do gráfico entre amor e ódio
+## Amor e ódio andam juntos?
 
 ```{r}
-#erro: amado_odiado
+
 poucas_temp =  poucas_temp %>%
+    
     mutate(
         rank_odiados = row_number(r1), # maior = mais odiado
         rank_amados = row_number(r10), # maior = mais amado
         amado_odiado = rank_amados * rank_odiados) # maior = mais amado E odiado
     
 poucas_temp %>%
+    filter(series_name == "Arrow") %>%
     ggplot(aes(x = r1,y = r10, color = season,
         size = amado_odiado,
         label = season_ep)) +
-    geom_point(alpha = .7) +
+    geom_point(alpha = .5) +
     geom_text(nudge_x = .001, nudge_y = -.01)
 ```
 
-*Comparação entre os dois episódios acima e as séries ao longo das temporadas*
+Das quatro séries analisadas, observamos que Arrow possui uma relação de amor e ódio ao decorrer de seus episódios, pois vimos que dentre esse conjunto de avaliações o episódio mais bem e menos avaliado pertence ao seu conjunto de dados, com notas máxima 9,9 e mínima 5,6, aos episódios Lian Yu(5 temporada - mais bem avaliada) e Schrim(4 temporada - mais mal avaliada).   
 
-*Conclusao da letra a*
+Com exposição dos dados, podemos observar que a série mais bem e mal avaliada é X e Y, respectivamente. Com diferença de cerca Z na avaliação dos usuários. 
 
 Outro questionamento que podemos fazer é, qual das séries que você escolheu tem episódios de qualidade mais irregular segundo o IMDB? A diferença é grande? Pequena?
 
-## Plot: Avaliação da série ao decorrer dos episódios
+## Avaliação da série ao decorrer dos episódios
 
 ```{r}
 poucas_temp %>%
     filter(series_name == "Arrow") %>%
-    ggplot(aes(x = series_ep, y = UserRating, color = series_name)) +
-    geom_line() +
-    facet_wrap(~ series_name)
+    mutate(Avaliação = UserRating, Número_episódios = series_ep, Série = series_name) %>% 
+    ggplot(aes(x = Número_episódios, y = Avaliação, color = Série)) +
+    ggtitle("Avaliação ao decorrer dos episódios: Arrow") +
+    geom_line() + geom_point() +
+    facet_wrap(~ Série)
 
 poucas_temp %>%
     filter(series_name == "Vikings") %>%
-    ggplot(aes(x = series_ep, y = UserRating, color = series_name)) +
-    geom_line() +
+    mutate(Avaliação = UserRating, Número_episódios = series_ep, Série = series_name) %>% 
+    ggplot(aes(x = Número_episódios, y = Avaliação, color = Série)) +
+    ggtitle("Avaliação ao decorrer dos episódios: Vikings") +
+    geom_line() + geom_point() +
     facet_wrap(~ series_name)
 
 
 poucas_temp %>%
     filter(series_name == "House of Cards") %>%
-    ggplot(aes(x = series_ep, y = UserRating, color = series_name)) +
-    geom_line() +
+    mutate(Avaliação = UserRating, Número_episódios = series_ep, Série = series_name) %>% 
+    ggplot(aes(x = Número_episódios, y = Avaliação, color = Série)) +
+    ggtitle("Avaliação ao decorrer dos episódios: House of Cards") +
+    geom_line() + geom_point() +
     facet_wrap(~ series_name)
 
 
 poucas_temp %>%
     filter(series_name == "American Horror Story") %>%
-    ggplot(aes(x = series_ep, y = UserRating, color = series_name)) +
-    geom_line() +
+    mutate(Avaliação = UserRating, Número_episódios = series_ep, Série = series_name) %>% 
+    ggplot(aes(x = Número_episódios, y = Avaliação, color = Série)) +
+    ggtitle("Avaliação ao decorrer dos episódios: American Horror Story") +
+    geom_line() + geom_point() +
     facet_wrap(~ series_name) 
 
 
 ```
 
-A partir dos gráficos acima, podemos observar que nos últimos episódios American Horror Story são os mais mal avaliados pelos usuários. Devido ao que? Este decaimento está ligado...
+A partir dos gráficos acima, podemos observar que nos últimos episódios American Horror Story são os mais mal avaliados pelos usuários, chegando a ganhar notas abaixo de 7. Devido à perda da originalidade e mudanças na estética do seriado. Por outro lado, Vikings tem crescimento da avaliação devido ao fato do respeito ao enredo do seriado e, sendo assim, envolver o público com a história.
 
 ## Quantidade de votos da série em cada temporada
 
-##Houve série com crescimento na votação? E alguma caiu? 
+### Houve série com crescimento na votação? E alguma caiu? 
 
 ```{r}
 poucas_temp %>%
     filter(series_name == "Arrow") %>%
-    ggplot(aes(x = season, y = UserVotes, fill = series_name)) +
+    ggplot(aes(x = season, y = UserVotes, fill = season)) +
     geom_col(position = position_identity()) +
     xlab("Séries") +
     ylab("Avaliação")
 
 poucas_temp %>%
     filter(series_name == "Vikings") %>%
-    ggplot(aes(x = season, y = UserVotes, fill = series_name)) +
+    ggplot(aes(x = season, y = UserVotes, fill = season)) +
     geom_col(position = position_identity()) +
     xlab("Séries") +
     ylab("Avaliação")
 
 poucas_temp %>%
     filter(series_name == "House of Cards") %>%
-    ggplot(aes(x = season, y = UserVotes, fill = series_name)) +
+    ggplot(aes(x = season, y = UserVotes, fill = season)) +
     geom_col(position = position_identity()) +
     xlab("Séries") +
     ylab("Avaliação")
 
 poucas_temp %>%
     filter(series_name == "American Horror Story") %>%
-    ggplot(aes(x = season, y = UserVotes, fill = series_name)) +
+    ggplot(aes(x = season, y = UserVotes, fill = season)) +
     geom_col(position = position_identity()) +
     xlab("Séries") +
     ylab("Avaliação")
 ```
-Vikings obteve crescimento no número de votos, principalmente na quarta temporada devido... POr outro lado, esse número caiu na terceira e quarta temporada por tal motivo. Questionamento: será que cai o número de votos ao decorrer das temporadas?
+A partir da observação do número de votos, assim como na avaliação, Vikings obteve também crescimento no número de votos, principalmente na quarta temporada. Por outro lado, para House of Cards esse número caiu na terceira e quarta temporada, mas não caiu na avaliação. 
 
+### Conclusão
 
-*Conclusão da letra b*
-
-
+Dessa forma, podemos ver que a série House of Cards possui irregularidade da avaliação dos usuários com os passar dos episódios, já que possui oscilações frequentes no gráfico, existindo intervalos entre os pontos com cerca de 1,4 e no número de votos também há diferenças consideráveis, com cerca de 2200 votos, ocorrendo entre a segunda e terceira temporada. Arrow por sua vez, demostra ser a série mais regular entre as analisadas, já que não possui diferenças de oscilações pequenas ao longo dos episódios. E para regularidade de votos American Horror Story e Vikings são boas candidatas, já que possuem pequenas oscilações no número de votos, com oscilações máximas de aproximadamente 2000 e 1000 votos, respectivamente
