@@ -20,8 +20,10 @@ Esta análise é feita através de dados fornecidos pelo IMDB sobre seriados at�
 
 De início, iremos carregar os dados das séries e filtrar as que queremos analisar. 
 
+>> usa sempre `read_csv` em vez de `read.csv` . e poucas_temp é um nome de variável que pode melhorar um bocado :)
+
 ```{r}
-poucas_temp = read.csv(here("data/series_from_imdb-all.csv")) %>% 
+poucas_temp = read_csv(here("data/series_from_imdb-all.csv")) %>% 
     filter(series_name %in% c("Arrow", "Vikings", "House of Cards", "American Horror Story"))
 ```
 
@@ -33,9 +35,7 @@ poucas_temp = read.csv(here("data/series_from_imdb-all.csv")) %>%
 poucas_temp %>% 
     mutate(Séries = series_name) %>% 
     group_by(Séries) %>% 
-    summarise(Avaliação_média = mean(UserRating), Temporadas = max(season)) %>% 
-    select(Séries, Temporadas, Avaliação_média) %>% 
-    unique()
+    summarise(`Avaliação média` = mean(UserRating), Temporadas = max(season))
 ```
 
 As séries listadas foram escolhidas com o critério de similaridade ao número de temporadas e da quantidade
@@ -43,30 +43,34 @@ de votos que cada uma obteve durante as avaliações feitas pelo público.
 
 Dessa forma, agora vamos fazer algumas observações sobre os gráficos e responder alguns questionamentos como: 
 
-- Qual das séries que você escolheu é mais bem avaliada no IMDB? A diferença é grande? Pequena? Muda de acordo com as temporadas da série? 
+- Qual das séries é mais bem avaliada no IMDB? A diferença é grande? Pequena? Muda de acordo com as temporadas da série? 
 
 Antes das observações serem feitas, é válido explicar um pouco cada conceito das análises que serão feitas com as séries:
 
     - Média: é a soma dos valores dos dados de um conjunto dividido pelo número de dados constante nesse conjunto.
     - Mediana: é o valor que medeia os valores presentes num conjunto ordenado numericamente.
-    - Desvio padrão: são medidas que dão uma ideia da dispersão de uma distribuição de dados, ou seja, valores altos indicam que os valores observados tendem a estar distantes da média, o inverso aplica-se para valores baixos.
-    - IQR: avalia a dispersão de dados somente depois de ordená-los em ordem crescente.
+    - Desvio padrão: mede a dispersão de uma distribuição de dados em relação à sua média, ou seja, valores altos indicam que os valores observados tendem a estar distantes da média, o inverso aplica-se para valores baixos.
+    - IQR: avalia a dispersão de dados somente depois de ordená-los em ordem crescente, dessa e dessa forma (faltou dizer :)).
 
 ##Quantidade de avaliações pelo IMDB
 
 Com o bloxplot, podemos observar que os seriados possuem uma quantidade de votos concentrada em regiões próximas
 a sua mediana. Alguns pontos ficaram fora do bloxplot, significa dizer que obteve quantidade de avaliações tanto abaixo, como acima dos quartis. Podemos observar claramente isto no seriado Arrow, com alguns pontos registrados bem acima do ponto de concentração dos votos, mostrando que alguns episódios houveram uma maior ou menor quantidade de avaliações. Já em American Horror Story, observamos uma concentração maior dos pontos no bloxplot, indicando a similaridade da quantidade de votos em cada episódio.
 
+>> Sugestões de sintaxes desse plot podem servir para os demais:
+
 ```{r}
 poucas_temp %>%
     mutate(Séries = series_name) %>%
-    ggplot(aes(x = series_name, y = UserVotes, color = Séries)) +
-    geom_boxplot(width = .5) +
-    ggtitle("Quantidade de avaliações de cada série pelo IMDB") +
+    ggplot(aes(x = reorder(series_name, UserVotes, FUN = median),
+               y = UserVotes,
+               color = Séries)) +
+    geom_boxplot(width = .5, outlier.colour = NA) +
     geom_jitter(width = .1, size = 2, alpha = .5) +
-    xlab("Nomes das séries") +
-    ylab("Quantidade de votos")
-
+    labs(x = "Nomes das séries",
+         y = "Quantidade de votos", 
+         title = "Quantidade de avaliações de cada série pelo IMDB") + 
+    theme(legend.position = "None")
 ```
 
 ##Distribuição das avaliações dos episódios
@@ -76,15 +80,15 @@ poucas_temp %>%
 
 O bloxplot abaixo mostra as notas que cada episódio obteve nos seriados ao longo das temporadas e com isso, podemos 
 observar que a maioria possui resultados entre o intervalo 8 a 10 nas avaliações. Citamos novamente a série Arrow, por obter algumas notas fora da concentração de pontos, significa que em alguns episódios não corresponderam as
-expectativas do público que avaliou a série com notas na faixa de 5 a 7, outros episódios com notas acima dos valores centrais. Já a mais concentrada é American Horror Story, com pequenos pontos espalhados fora do bloxplot, sendo assim, isso implica que os usuários avaliaram de uma forma similar os episódios da série.
+expectativas do público que avaliou a série com notas na faixa de 5 a 7, outros episódios com notas acima dos valores centrais. Já a mais concentrada é American Horror Story, com poucos pontos espalhados fora do bloxplot, sendo assim, isso implica que os usuários avaliaram de uma forma similar os episódios da série.
 
 ```{r}
 # usando a nota de avaliação
 poucas_temp %>%
     mutate(Séries = series_name) %>%
     ggplot(aes(x = series_name, y = UserRating, color = Séries)) +
-    geom_boxplot(width = .5) +
-    geom_jitter(width = .2, alpha = .7) +
+    geom_boxplot(width = .5, outlier.colour = NA) + # senão os "outliers" aparecem 2x
+    geom_jitter(width = .2, alpha = .7, size = .8) +
     ggtitle("Distribuição das avaliações dos episódios") +
     ylim(5, 10) +
     labs(x = "Episódios", y = "Avaliação")
@@ -93,14 +97,16 @@ Podemos observar que American Horror Story possui a maior concentração de nota
 
 ## Avaliações ao longo do tempo por temporada
 
+>> Essa estava ruim de ver por causa da ligação entre episódios em uma mesma temporada...
+
 ```{r}
 poucas_temp %>% 
     mutate(Séries = series_name) %>%
-  ggplot(aes(x = season, y = UserRating, color = Séries)) + 
-  geom_line() +
+    ggplot(aes(x = season_ep, y = UserRating, color = Séries)) + 
+    geom_line() +
+    geom_point(size = .7) +
+    facet_grid(Séries ~ season) + 
     ggtitle("Notas por temporada") +
-    xlim(1,6) +
-  geom_point() +
     xlab("Temporada") +
     ylab("Avaliação")
 ```
@@ -175,43 +181,24 @@ Outro questionamento que podemos fazer é, qual das séries que você escolheu t
 
 ```{r}
 poucas_temp %>%
-    filter(series_name == "Arrow") %>%
-    mutate(Avaliação = UserRating, Número_episódios = series_ep, Série = series_name) %>% 
-    ggplot(aes(x = Número_episódios, y = Avaliação, color = Série)) +
-    ggtitle("Avaliação ao decorrer dos episódios: Arrow") +
-    geom_line() + geom_point() +
-    facet_wrap(~ Série)
-
-poucas_temp %>%
-    filter(series_name == "Vikings") %>%
-    mutate(Avaliação = UserRating, Número_episódios = series_ep, Série = series_name) %>% 
-    ggplot(aes(x = Número_episódios, y = Avaliação, color = Série)) +
-    ggtitle("Avaliação ao decorrer dos episódios: Vikings") +
-    geom_line() + geom_point() +
-    facet_wrap(~ series_name)
-
-
-poucas_temp %>%
-    filter(series_name == "House of Cards") %>%
-    mutate(Avaliação = UserRating, Número_episódios = series_ep, Série = series_name) %>% 
-    ggplot(aes(x = Número_episódios, y = Avaliação, color = Série)) +
-    ggtitle("Avaliação ao decorrer dos episódios: House of Cards") +
-    geom_line() + geom_point() +
-    facet_wrap(~ series_name)
-
-
-poucas_temp %>%
-    filter(series_name == "American Horror Story") %>%
-    mutate(Avaliação = UserRating, Número_episódios = series_ep, Série = series_name) %>% 
-    ggplot(aes(x = Número_episódios, y = Avaliação, color = Série)) +
-    ggtitle("Avaliação ao decorrer dos episódios: American Horror Story") +
-    geom_line() + geom_point() +
-    facet_wrap(~ series_name) 
-
-
+    mutate(Avaliação = UserRating,
+           `Número episódios` = series_ep,
+           Série = series_name) %>%
+    group_by(Série) %>% 
+    mutate(`Posição na série` = `Número episódios` / max(series_ep)) %>% 
+    ggplot(aes(
+        x = `Posição na série`,
+        y = Avaliação,
+        color = Série
+    )) +
+    geom_line() + 
+    geom_point() +
+    facet_wrap( ~ Série)
 ```
 
 A partir dos gráficos acima, podemos observar que nos últimos episódios American Horror Story são os mais mal avaliados pelos usuários, chegando a ganhar notas abaixo de 7. Isso ocorre devido a fatores como a perda da originalidade e mudanças na estética do seriado. Por outro lado, Vikings tem crescimento da avaliação devido a fatos como o respeito ao enredo do seriado e, sendo assim, manter o público envolvido com a história.
+
+>> Acho que algumas percepções do parágrafo acima aconteciam porque a escala do eixo vertical mudava de figura para figura, certo?
 
 ## Quantidade de votos da série em cada temporada
 
@@ -233,6 +220,9 @@ A partir da observação do número de votos, assim como na avaliação, Vikings
 Dessa forma, podemos ver que a série House of Cards possui irregularidade da avaliação dos usuários com os passar dos episódios, já que possui oscilações frequentes no gráfico, existindo intervalos entre os pontos com cerca de 1,4 e no número de votos também há diferenças consideráveis, com cerca de 2200 votos, ocorrendo entre a segunda e terceira temporada. Arrow por sua vez, demostra ser a série mais regular entre as analisadas, já que não possui diferenças de oscilações pequenas ao longo dos episódios. E para regularidade de votos American Horror Story e Vikings são boas candidatas, já que possuem pequenas oscilações no número de votos, com oscilações máximas de aproximadamente 2000 e 1000 votos, respectivamente
 
 ### Episódios no início/fim da temporada são mais bem avaliados que os no meio? O que tende a ser melhor? Inícios ou finais de séries/temporadas?
+
+>> Acho que tivemos uma falha de comunicação aqui: minha ideia era comparar o 1o e último episódios de cada temporada com os episódios do meio daquela mesma temporada, pra ver se os episódios que começam e terminam a temporada são melhor avaliados que "os do meio".
+
 ```{r}
 poucas_temp %>%
     mutate(Temporada = season, Séries = series_name) %>% 
