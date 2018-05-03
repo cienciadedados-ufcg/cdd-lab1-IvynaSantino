@@ -1,0 +1,63 @@
+---
+title: "Análise de dados de séries modinhas"
+author: "Ivyna Santino"
+date: "3 de maio de 2018"
+output: html_document
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float: yes
+  html_notebook:
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(here)
+theme_set(theme_bw())
+```
+
+De início, iremos carregar os dados das séries e filtrar as que queremos analisar. 
+
+*Pesquisei algumas das séries mais assistidas em 2017*
+```{r}
+series_modinhas = read_csv(here("data/series_from_imdb-all.csv")) %>% 
+    filter(series_name %in% c("Game of Thrones", "Sense8", "Breaking Bad", "13 Reasons Why"))
+```
+
+*Séries com 7 ou mais temporadas*
+```{r}
+mais_temporadas = read_csv(here("data/series_from_imdb-all.csv")) %>% 
+    filter(series_name %in% c("The Walking Dead", "House"))
+
+```
+
+## Perguntas:
+
+1. Séries com muitas temporadas mantém a qualidade nas avaliações?
+    1.1 A temporada mais bem avaliada da série possui uma maior proporção de notas 10?
+    1.2 O gênero dessas séries influenciou na quantidade boas avaliações?
+2. A má avaliação de uma temporada implica no cancelamento da série?
+    2.2 Nas séries com menores avaliações, existiu algum episódio que recebeu nota máxima?
+
+*Fazer uma conclusão com séries muito assistidas "atualmente"(2017)*
+
+```{r}
+series_modinhas %>% 
+    ggplot(aes(x = series_name, y = UserRating, color = series_name)) +
+    geom_boxplot(width = .5)
+
+
+```
+
+
+```{r}
+mais_temporadas %>% 
+    ggplot(aes(x = series_name, y = UserRating, color = series_name)) +
+    geom_boxplot(width = .5) +
+     geom_jitter(width = .1, size = 2, alpha = .5) +
+    geom_point()
+
+
+```
