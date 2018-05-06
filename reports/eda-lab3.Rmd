@@ -233,5 +233,97 @@ O episódio pior avaliado é o Swear com avaliação do público de 5.7, ver o p
 
 ### Mas será que uma série bem avaliada possui muitos votos recebidos?
 
+```{r}
+series_modinhas %>% 
+    mutate(Série = series_name,
+           `Número de votos` = UserVotes) %>% 
+    ggplot(aes(
+        x = season,
+        y = `Número de votos`,
+        size = `Número de votos`,
+        label = season_ep,
+        color = Série
+    )) +
+    geom_point(alpha = .5) +
+    geom_text(nudge_x = .01, nudge_y = .01) +
+    labs(x = "Temporada",
+         y = "Número de votos",
+         title = "Distribuição de votos por temporada")
 
+```
+
+A partir dos resultados e conclusões obtidas anteriomente, podemos dizer que entre as séries escolhidas as mais bem avaliadas são Game of Thrones e Breaking Bad e com este gráfico acima também podemos dizer que ambas possuem a maior quantidade de votos por temporada, inclusive Game of Thrones se destacou tem quantidade de votos na sexta temporada, com 138.353 votos recebidos. Podemos ver abaixo mais informações sobre o episódio:
+
+```{r}
+series_modinhas %>% 
+    mutate(Série = series_name,
+           Temporada = season,
+           Avaliação = UserRating,
+           `Nome do episódio` = Episode,
+           Votos = UserVotes) %>% 
+    select(Série, `Nome do episódio`, Temporada, Avaliação, Votos) %>% 
+    filter(Série == "Game of Thrones",
+           Temporada == 6,
+           Votos == max(Votos))
+
+```
+
+Já 13 Reasons Why não possui tantos votos, mas as avaliações do público foram altas. Então, significa dizer que nem sempre uma série com uma grande quantidade de votos tem maior avaliação. Podemos ver mais claramente com o gráfico abaixo, que mostra a quantidade de votos recebidos, a média e a mediana das avaliações para 13 Reasons Why e The Walking Dead:
+
+```{r}
+series_modinhas %>% 
+    mutate(Série = series_name) %>% 
+    filter(Série %in% c("The Walking Dead", "13 Reasons Why")) %>% 
+    select(Série, UserRating, UserVotes) %>% 
+    group_by(Série) %>% 
+    summarise(Média = mean(UserRating),
+              Mediana = median(UserRating),
+              `Desvio padrão` = sd(UserRating),
+              `Total de votos` = sum(UserVotes))
+    
+```
+
+Embora 13 Reasons Why só possua uma temporada, a média geral é maior que The Walking Dead com sete temporadas. Então, podemos concluir que nem sempre uma série que possui a avaliação alta significa dizer que recebeu muitos votos. Podemos observar isto através do bloxplot abaixo:
+
+```{r}
+series_modinhas %>% 
+    mutate(Série = series_name) %>% 
+    filter(Série %in% c("The Walking Dead", "13 Reasons Why")) %>% 
+    ggplot(aes(
+        x = Série,
+        y = UserRating,
+        color = Série
+    )) +
+    geom_boxplot(width = .5) +
+    labs(x = "Série",
+         y = "Avaliação",
+         title = "Distribuição das avaliações das séries") +
+    geom_jitter(width = .1, size = 2, alpha = .5)
+
+```
+
+A partir do bloxplot, observamos que as notas da série 13 Reasons Why estão mais concentradas próximas a mediana. Já em The Walking Dead, possui algumas notas fora do bloxplot, tanto superiores quanto inferiores, fator que influencia na nota final das avaliações. 
+
+Outro fator que também podemos observar é o número de votos recebidos, eles cresceram ao longo das temporadas, principalmente nas últimas temporadas. No gráfico abaixo pode-se observar melhor a quantidade de votos em cada temporada.
+
+```{r}
+series_modinhas %>%  
+    mutate(Série = series_name) %>% 
+    ggplot(aes(
+        x = season,
+        y = UserVotes,
+        fill = Série
+    )) +
+    geom_col(position = position_identity()) +
+    labs(x = "Temporada",
+         y = "Número de votos",
+         title = "Distribuição do número de votos a cada temporada") +
+    
+    facet_wrap(~ series_name)
+
+```
+
+## Mas afinal, as séries escolhidas são modinhas ou realmente conquistaram o coração do público?
+
+Com resultados obtidos anteriormente, podemos observar que as séries ganharam os corações do seu público, principalmente pela boa avaliação e, muitas delas, avaliações e quantidade de votos crescentes com o passar das temporadas, provando a satisfação e a conquista de novos fãs.
 
