@@ -1,5 +1,5 @@
 ---
-title: "Análise de dados de séries modinhas"
+title: "É modinha ou ganhou o coração do povo"
 author: "Ivyna Santino"
 date: "3 de maio de 2018"
 output: html_document
@@ -17,47 +17,194 @@ library(tidyverse)
 library(here)
 theme_set(theme_bw())
 ```
+Esta análise é feita através de dados fornecidos pelo IMDB sobre seriados até o ano de 2017. Para mais informações consulte este repositório: https://github.com/nazareno/imdb-series
 
 De início, iremos carregar os dados das séries e filtrar as que queremos analisar. 
 
 *Pesquisei algumas das séries mais assistidas em 2017*
 ```{r}
 series_modinhas = read_csv(here("data/series_from_imdb-all.csv")) %>% 
-    filter(series_name %in% c("Game of Thrones", "Sense8", "Breaking Bad", "13 Reasons Why"))
+    filter(series_name %in% c("Game of Thrones", "Breaking Bad", "13 Reasons Why", "The Walking Dead"))
 ```
 
-*Séries com 7 ou mais temporadas*
-```{r}
-mais_temporadas = read_csv(here("data/series_from_imdb-all.csv")) %>% 
-    filter(series_name %in% c("The Walking Dead", "House"))
+Listando as séries que seram analisadas:
 
+```{r}
+series_modinhas %>% 
+    mutate(Séries = series_name) %>% 
+    group_by(Séries) %>% 
+    summarise(`Avaliação média` = mean(UserRating), Temporadas = max(season))
 ```
 
 ## Perguntas:
 
 1. Séries com muitas temporadas mantém a qualidade nas avaliações?
-    1.1 A temporada mais bem avaliada da série possui uma maior proporção de notas 10?
-    1.2 O gênero dessas séries influenciou na quantidade boas avaliações?
+    1.1 A temporada mais bem avaliada da série possui uma maior proporção de notas 10? OK
+    1.2 O gênero dessas séries influenciou na quantidade boas avaliações? OK
 2. A má avaliação de uma temporada implica no cancelamento da série?
     2.2 Nas séries com menores avaliações, existiu algum episódio que recebeu nota máxima?
 
 *Fazer uma conclusão com séries muito assistidas "atualmente"(2017)*
 
+##Séries com muitas temporadas mantém a qualidade nas avaliações?
+
+Como observado anteriormente, das séries escolhidas as duas com o maior número de temporadas são: The Walking Dead e Game of Thrones, com 7 e 6 temporadas, respectivamente. Então, vamos analisá-las e observar se elas mantém a qualidade nas avaliações com o passar das temporadas.
+
 ```{r}
 series_modinhas %>% 
-    ggplot(aes(x = series_name, y = UserRating, color = series_name)) +
-    geom_boxplot(width = .5)
+    mutate(Série = series_name) %>% 
+    filter(Série %in% c("Game of Thrones", "The Walking Dead")) %>% 
+    ggplot(aes(x = season,
+               y = UserRating,
+               fill = Série)) +
+    geom_col(position = position_identity()) +
+    labs(x = "Número de temporadas",
+         y = "Avaliação",
+         title = "Avaliação das séries a cada temporada") +
+    facet_wrap(~ Série)
+
+```
+
+Como podemos observar, a série Game of Thrones manteve uma boa avaliação com o passar das temporadas, sempre com notas acima de 8 em suas avaliações. Em The Walking Dead, avaliação foi crescente até a sexta temporada, assim como Game of Thrones, com notas acima de 8, mas na sétima temporada houve uma pequena queda nas avaliações (ver motivo!!).
+
+Mostrar episódio com menor avaliação da 7 temporada de TWD
+```{r}
+series_modinhas %>% 
+    mutate(Série = series_name,
+           Temporada = season,
+           Avaliação = UserRating,
+           `Nome do episódio` = Episode) %>% 
+    select(Série, `Nome do episódio`, Temporada, Avaliação) %>% 
+    filter(Série == "The Walking Dead",
+           Temporada == 7,
+           Avaliação == min(Avaliação))
 
 
 ```
 
 
-```{r}
-mais_temporadas %>% 
-    ggplot(aes(x = series_name, y = UserRating, color = series_name)) +
-    geom_boxplot(width = .5) +
-     geom_jitter(width = .1, size = 2, alpha = .5) +
-    geom_point()
+### A partir disso, é sensato dizer que a temporada mais bem avaliada da série possui uma maior proporção de notas 10?
 
+Para GoT:
+
+```{r}
+series_modinhas %>% 
+    filter(series_name == "Game of Thrones") %>% 
+    mutate(Temporada = season,
+           `Notas 10` = r10) %>% 
+    ggplot(aes(
+        x = season,
+        y = `Notas 10`,
+        size = `Notas 10`,
+        label = season_ep,
+        color = Temporada
+    )) +
+    geom_point(alpha = .7) +
+    geom_text(nudge_x = .01, 
+              nudge_y = .01
+              ) +
+    labs(x = "Temporada",
+         y = "Notas 10",
+         title = "Distribuição de notas 10 em Game of Thrones"
+    )
+```
+
+Podemos notar que para GoT, a maior quantidade de notas 10 estão realmente na terceira, quinta e sexta temporada, que consequentemente, são as temporadas mais bem avaliadas. Dessa maneira, confirma-se o questionamente feito anteriormente, se a temporada mais bem avaliada possuem a maior proporção de notas máximas dadas pelo público.  
+
+Para TWD:
+```{r}
+series_modinhas %>% 
+    filter(series_name == "The Walking Dead") %>% 
+    mutate(Temporada = season,
+           `Notas 10` = r10) %>% 
+    ggplot(aes(
+        x = season,
+        y = `Notas 10`,
+        size = `Notas 10`,
+        label = season_ep,
+        color = Temporada
+    )) +
+    geom_point(alpha = .7) +
+    geom_text(nudge_x = .001, 
+              nudge_y = .01
+              ) +
+    labs(x = "Temporada",
+         y = "Notas 10",
+         title = "Distribuição de notas 10 em The Walking Dead"
+    )
+```
+
+Assim como GoT, a série The Walking Dead, também possui as maiores concentrações de notas 10 nas temporadas mais bem avaliadas, sendo elas, a quarta e a sexta temporada. Então, a partir desses resultados, podemos concluir que as temporadas mais bem avaliadas também possuem a maior proporção de notas máximas.
+
+### O gênero dessas séries influenciou nas boas avaliações?
+Got = Fantasia, Drama
+TWD = Drama 
+13 = Drama
+Breaking = Drama
+
+Ao pesquisar no site(linkar), encontramos que ambas as séries são do gênero drama. A partir disso, que tal procurar os melhores episódios avaliados de todo o banco de dados e observar qual o gênero a que eles pertencem?
+
+```{r}
+todas_series = read_csv(here("data/series_from_imdb-all.csv"))
+
+```
+
+Melhores ep avaliados (genero)
+
+```{r}
+todas_series %>% 
+    mutate(Série = series_name, 
+           `Nome do episódio` = Episode, 
+           Temporada = season, 
+           Avaliação = UserRating) %>% 
+    select(Série, `Nome do episódio`, Temporada, Avaliação) %>% 
+    filter(Avaliação == max(Avaliação))
+```
+
+Com os resultados acima, os episódios pertecem aos seguintes gêneros:
+
+(Colocar pontos)
+Breaking Bad: Drama
+Arrow: Fantasia
+Person of Interest: Suspense
+Game of Thrones: Drama
+Hannibal: Drama
+
+Dessa forma, podemos dizer que o gênero mais bem avaliados entre os episódios é Drama. Talvez pelo fato de instigar a curiosidade e mexer com sentimentos do público ao decorrer da trama.
+
+## A má avaliação de uma temporada implica no cancelamento da série?
+
+
+```{r}
+series_modinhas %>% 
+    mutate(Séries = series_name) %>% 
+    ggplot(aes(x = Séries, 
+               y = UserRating, 
+               color = Séries)) +
+    geom_boxplot(width = .5) +
+    geom_jitter(width = .2, alpha = .7) +
+    labs(x = "Nomes das séries",
+         y = "Quantidade de votos",
+         title = "Avaliação das séries pelo IMDB") +
+    theme(legend.position = "None")
+
+```
+
+
+
+
+Extra
+```{r}
+series_modinhas %>% 
+    mutate(Avaliação = UserRating,
+           `Número de temporadas` = season,
+           Série = series_name) %>% 
+    group_by(Série) %>% 
+    ggplot(aes(x = `Número de temporadas`,
+               y = Avaliação,
+               fill = Série
+               )) +
+    geom_col(position = position_identity()) +
+    facet_wrap(~ Série)
 
 ```
