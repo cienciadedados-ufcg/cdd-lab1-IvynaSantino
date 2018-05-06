@@ -1,8 +1,8 @@
 ---
-title: "É modinha ou ganhou o coração do povo"
+title: "É modinha ou ganhou o coração do povo?"
 author: "Ivyna Santino"
 date: "6 de maio de 2018"
-output: html_document
+output:
   html_document:
     df_print: paged
     toc: yes
@@ -17,17 +17,16 @@ library(tidyverse)
 library(here)
 theme_set(theme_bw())
 ```
-Esta análise é feita através de dados fornecidos pelo IMDB sobre seriados até o ano de 2017. Para mais informações consulte este repositório: https://github.com/nazareno/imdb-series
+Esta análise é feita através de dados fornecidos pelo IMDB sobre seriados até o ano de 2017. Para mais informações consulte este [repositório](https://github.com/nazareno/imdb-series)
 
 De início, iremos carregar os dados das séries e filtrar as que queremos analisar. 
 
-*Pesquisei algumas das séries mais assistidas em 2017*
 ```{r}
 series_modinhas = read_csv(here("data/series_from_imdb-all.csv")) %>% 
     filter(series_name %in% c("Game of Thrones", "Breaking Bad", "The Walking Dead", "13 Reasons Why"))
 ```
 
-## Séries que seram analisadas:
+### Séries que serão analisadas:
 
 ```{r}
 series_modinhas %>% 
@@ -37,15 +36,7 @@ series_modinhas %>%
               Temporadas = max(season))
 ```
 
-As séries listadas acima foram algumas das mais assistidas e comentadas ano de 2017 segundo o site Adoro Cinema(link), nas quais iremos fazer alguns questionamentos e chegar ao resultado se realmente elas conquistaram o público ou não.
-
-## Perguntas:
-
-1. Séries com muitas temporadas mantém a qualidade nas avaliações?
-    1.1 A temporada mais bem avaliada da série possui uma maior proporção de notas 10? OK
-    1.2 O gênero dessas séries influenciou na quantidade boas avaliações? OK
-2. A má avaliação de uma temporada implica no cancelamento da série?
-    2.2 Nas séries com maiores avaliações, existiu algum episódio que recebeu nota abaixo de 7?
+As séries listadas acima foram algumas das mais assistidas e comentadas ano de 2017 segundo o site Adoro Cinema, nas quais iremos fazer alguns questionamentos e chegar ao resultado se realmente elas conquistaram o público ou não.
 
 ##Dessa forma, podemos dizer que séries com muitas temporadas mantém a qualidade nas avaliações?
 
@@ -84,8 +75,6 @@ series_modinhas %>%
 
 ### A partir disso, é sensato dizer que a temporada mais bem avaliada da série possui uma maior proporção de notas 10?
 
-Para Game of Thrones:
-
 ```{r}
 series_modinhas %>% 
     filter(series_name == "Game of Thrones") %>% 
@@ -110,7 +99,6 @@ series_modinhas %>%
 
 Podemos notar que para GoT(Game of Thrones), a maior quantidade de notas 10 estão realmente na terceira, quinta e sexta temporada, que consequentemente, são as temporadas mais bem avaliadas. Dessa maneira, confirma-se o questionamente feito anteriormente, se a temporada mais bem avaliada possuem a maior proporção de notas máximas dadas pelo público.  
 
-Para The Walking Dead:
 ```{r}
 series_modinhas %>% 
     filter(series_name == "The Walking Dead") %>% 
@@ -137,7 +125,7 @@ Assim como GoT, a série The Walking Dead, também possui as maiores concentraç
 
 ### E quanto ao gênero dessas séries, influenciou nas boas avaliações?
 
-Obs.: No banco do IMDB não é fornecido o gênero das séries, então pesquisei no site Adoro Cinema.
+Obs.: No banco do IMDB não é fornecido o gênero das séries, então pesquisei no site [Adoro Cinema](http://www.adorocinema.com/).
 
 - Got: Fantasia, Drama
 - The Walking Dead: Drama 
@@ -174,7 +162,7 @@ Com os resultados acima, os episódios pertecem aos seguintes gêneros:
 
 Dessa forma, podemos dizer que o gênero mais bem avaliados entre os episódios é Drama. Talvez esse resultado tenha se dado pelo fato do gênero instigar a curiosidade e mexer com sentimentos do público ao decorrer da trama.
 
-##E a má avaliação de uma temporada implica no cancelamento da série?
+##E a má avaliação de uma temporada, implica no cancelamento da série?
 
 Para observar os resultados desta pergunta, antes devemos observar o gráfico abaixo com a avaliações ao decorrer das temporadas de cada série.
 
