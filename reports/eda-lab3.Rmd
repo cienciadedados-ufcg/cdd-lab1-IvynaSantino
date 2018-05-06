@@ -200,5 +200,38 @@ A série 13 Reasons Why, por enquanto, só possui uma temporada, mas foi uma das
 
 ### Já que as séries analisadas possuem boa avaliação, existiu algum episódio que recebeu nota abaixo de 7?
 
+```{r}
+series_modinhas %>% 
+    mutate(Série = series_name) %>% 
+    group_by(Série) %>% 
+    ggplot(aes(x = season_ep,
+               y = UserRating,
+               size = season,
+               color = Série
+               )) +
+    geom_point(alpha = .7) +
+    labs(
+        x = "Número de temporadas",
+        y = "Avaliação",
+        title = "Avaliação das séries por temporada"
+    ) +
+    facet_wrap(~ Série)
+
+```
+
+Podemos observar que a série The Walking Dead recebeu notas abaixo da média, chegando a ficar abaixo de 6. Isto aconteceu na sétima temporada, que inclusive possui pelo menos mais 3 pontos abaixo de 7. 
+
+
+```{r}
+series_modinhas %>% 
+    filter(series_name == "The Walking Dead",
+           UserRating == min(UserRating))
+
+```
+
+O episódio pior avaliado é o Swear com avaliação do público de 5.7, ver o porquê da má avaliação.
+
+### Mas será que uma série bem avaliada possui muitos votos recebidos?
+
 
 
