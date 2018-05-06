@@ -24,7 +24,7 @@ De início, iremos carregar os dados das séries e filtrar as que queremos anali
 *Pesquisei algumas das séries mais assistidas em 2017*
 ```{r}
 series_modinhas = read_csv(here("data/series_from_imdb-all.csv")) %>% 
-    filter(series_name %in% c("Game of Thrones", "Breaking Bad", "13 Reasons Why", "The Walking Dead"))
+    filter(series_name %in% c("Game of Thrones", "Breaking Bad", "The Walking Dead", "13 Reasons Why"))
 ```
 
 Listando as séries que seram analisadas:
@@ -42,7 +42,7 @@ series_modinhas %>%
     1.1 A temporada mais bem avaliada da série possui uma maior proporção de notas 10? OK
     1.2 O gênero dessas séries influenciou na quantidade boas avaliações? OK
 2. A má avaliação de uma temporada implica no cancelamento da série?
-    2.2 Nas séries com menores avaliações, existiu algum episódio que recebeu nota máxima?
+    2.2 Nas séries com maiores avaliações, existiu algum episódio que recebeu nota abaixo de 7?
 
 *Fazer uma conclusão com séries muito assistidas "atualmente"(2017)*
 
@@ -174,37 +174,31 @@ Dessa forma, podemos dizer que o gênero mais bem avaliados entre os episódios 
 
 ## A má avaliação de uma temporada implica no cancelamento da série?
 
+Para observar os resultados desta pergunta, antes devemos "plotar" um gráfico com a avaliações ao decorrer das temporadas de cada série.
 
 ```{r}
 series_modinhas %>% 
-    mutate(Séries = series_name) %>% 
-    ggplot(aes(x = Séries, 
-               y = UserRating, 
-               color = Séries)) +
-    geom_boxplot(width = .5) +
-    geom_jitter(width = .2, alpha = .7) +
-    labs(x = "Nomes das séries",
-         y = "Quantidade de votos",
-         title = "Avaliação das séries pelo IMDB") +
-    theme(legend.position = "None")
-
-```
-
-
-
-
-Extra
-```{r}
-series_modinhas %>% 
-    mutate(Avaliação = UserRating,
-           `Número de temporadas` = season,
-           Série = series_name) %>% 
+    mutate(Série = series_name) %>% 
     group_by(Série) %>% 
-    ggplot(aes(x = `Número de temporadas`,
-               y = Avaliação,
+    ggplot(aes(x = season,
+               y = UserRating,
                fill = Série
                )) +
     geom_col(position = position_identity()) +
+    labs(
+        x = "Número de temporadas",
+        y = "Avaliação",
+        title = "Avaliação das séries por temporada"
+    ) +
     facet_wrap(~ Série)
 
 ```
+
+Antes de tudo, as séries que estamos trabalhando possuem boa avaliação, então a má avaliação estaria relacionado a alguma queda nas avaliações ao longo das temporadas. Dessa maneira, podemos observar que Game of Thrones houve uma queda nas avaliações durante a quarta temporada, mas não implicou dizer que a série será cancelada e inclusive, as temporadas posteriores estão entre as mais bem avaliadas. Para Breaking Bad, as avaliações se tornam crescentes de com o passar das temporadas, demonstrando que a série se tornou mais instigante e melhorou a qualidade durante as temporadas. Já The Walking Dead teve uma queda nas avaliações na sétima temporada, devido(explicar motivo), mas como só possuímos dados até 2017, a série não foi cancelada e a oitava já foi lançada, no entanto não podemos concluir sobre os resultados da oitava temporada e se superou as avaliações das temporadas anteriores. 
+
+A série 13 Reasons Why, por enquanto, só possui uma temporada, mas foi uma das séries mais assistidas durante o ano de 2017, segundo tal site. Abordando um tema muito delicado, a questão do suicídio, acabou caindo no gosto do público e com as boas avaliações irá ganhar uma nova temporada. Nessa nova temporada outro assunto forte será tratado, a questão do abuso sexual e seus impactos na vida do ser humano. 
+
+### Já que as séries analisadas possuem boa avaliação, existiu algum episódio que recebeu nota abaixo de 7?
+
+
+
