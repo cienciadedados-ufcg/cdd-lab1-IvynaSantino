@@ -51,12 +51,14 @@ series %>%
                           '<br>Votos:', UserVotes,
                           '<br>Temporada:', season)
             ) %>% 
-    layout(title = "Proporção de notas 10 e avaliação médias dos episódios",
+    layout(title = "Proporção de notas 10 e avaliação média dos episódios",
            yaxis = list(title = "Proporção de notas 10"),
            xaxis = list(title = "Avaliação média dos episódios"))
 
 ```
 
-De acordo com a observação acima, podemos dizer que na série Arrow, o episódio que possui maior proporção de notas 10 é Bratva da quinta temporada, com cerca de 90,33% de notas 10, no entanto sua avaliação média é de 8,3, inclusive abaixo da média geral da série demostrada no quadro acima. Já no caso House of Cards, o episódio Chapter 14 da segunda temporada possui uma das maiores médias e proporção de notas máximas da série, mas não tão grande quanto Bratva. 
-Outra observação, seria entre o número de votos, a avaliação média e proporção de notas 10, no episódio The Climb do seriado Arrow, pois possui um dos maiores volumes de votos e média de avaliação alta, mas possui proporção de notas 10 de 42,39%. Dessa forma, podemos concluir que nem sempre um episódio bem avaliado possui maior quantidade de nota máxima.
+
+De acordo com a observação acima, podemos dizer que na série Arrow, o episódio que possui maior proporção de notas 10 é Bratva da quinta temporada, com cerca de 90,33% de notas 10, no entanto sua avaliação média é de 8,3, inclusive abaixo da média geral da série demostrada no quadro acima. Já no caso House of Cards, o episódio Chapter 14 da segunda temporada possui uma das maiores médias e proporção de notas máximas da série, mas ainda não supera a proporção de Bratva. 
+
+Outra observação, seria com a adição da variável número de votos. Dessa maneira, podemos observar que no episódio The Climb do seriado Arrow, já que possui um dos maiores volumes de votos e com média de avaliação alta, no entanto possui proporção de notas 10 relativamente baixa, cerca de 42,39%. Dessa forma, podemos concluir que nem sempre um episódio bem avaliado possui maior quantidade de nota máxima.
 
