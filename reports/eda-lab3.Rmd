@@ -53,11 +53,13 @@ series %>%
     labs(x = "Número de temporadas",
          y = "Avaliação",
          title = "Avaliação das séries a cada temporada") +
+  scale_x_continuous(breaks=seq(1, 7, 1)) +
+  scale_y_continuous(breaks=seq(1, 10, 0.5)) + # pode auxiliar na explicação
     facet_wrap(~ Série)
 
 ```
 
-Como podemos observar, a série Game of Thrones manteve uma boa avaliação com o passar das temporadas, sempre com notas acima de 8 em suas avaliações. Em The Walking Dead, avaliação foi crescente até a sexta temporada, assim como Game of Thrones, com notas acima de 8, mas na sétima temporada houve uma pequena queda nas avaliações devido as inconsistências no roteiro, lentidão ao contar a história, aspectos poucos instigantes e que foram algumas das causas do decrescimento nas avaliações realizadas pelo público. Dessa forma, logo abaixo, o episódio com menor avaliação está na sétima temporada.
+Como podemos observar, a série Game of Thrones manteve uma boa avaliação com o passar das temporadas, sempre com notas acima de 8 em suas avaliações. Em The Walking Dead, avaliação foi crescente até a sexta temporada, assim como Game of Thrones, com notas acima de 8, mas na sétima temporada houve uma pequena queda nas avaliações devido as inconsistências no roteiro, lentidão ao contar a história, aspectos poucos instigantes e que podem ter sido (?) algumas das causas do decrescimento nas avaliações realizadas pelo público. Dessa forma, logo abaixo, o episódio com menor avaliação está na sétima temporada.
 
 ```{r}
 series %>% 
@@ -91,8 +93,9 @@ series %>%
     geom_text(nudge_x = .01, 
               nudge_y = .01
               ) +
+  scale_x_continuous(breaks=seq(1, 6, 1)) +
     labs(x = "Temporada",
-         y = "Notas 10",
+         y = "Prop Notas 10",
          title = "Distribuição de notas 10 em Game of Thrones"
     )
 ```
@@ -123,7 +126,7 @@ series %>%
 
 Assim como GoT, a série The Walking Dead, também possui as maiores concentrações de notas 10 nas temporadas mais bem avaliadas, sendo elas, a quarta e a sexta temporada. Então, a partir desses resultados, podemos concluir que as temporadas mais bem avaliadas também possuem a maior proporção de notas máximas.
 
-### E quanto ao gênero dessas séries, influenciou nas boas avaliações?
+### Séries bem avaliadas pertencem a um gênero específico?
 
 Obs.: No banco do IMDB não é fornecido o gênero das séries, então pesquisei no site [Adoro Cinema](http://www.adorocinema.com/).
 
@@ -180,6 +183,7 @@ series %>%
         y = "Avaliação",
         title = "Avaliação das séries por temporada"
     ) +
+    scale_x_continuous(breaks=seq(1, 7, 1)) +
     facet_wrap(~ Série)
 
 ```
@@ -196,15 +200,16 @@ series %>%
     group_by(Série) %>% 
     ggplot(aes(x = season_ep,
                y = UserRating,
-               size = season,
-               color = Série
+               #size = season,
+               color = season
                )) +
     geom_point(alpha = .7) +
     labs(
-        x = "Número de temporadas",
+        x = "Episódio",
         y = "Avaliação",
         title = "Avaliação das séries por temporada"
     ) +
+  scale_x_continuous(breaks=seq(1, 16, 1)) +
     facet_wrap(~ Série)
 
 ```
@@ -226,6 +231,8 @@ series %>%
 ### Mas será que uma série bem avaliada possui muitos votos recebidos?
 
 ```{r}
+options(scipen = 999)
+
 series %>% 
     mutate(Série = series_name,
            `Número de votos` = UserVotes) %>% 
@@ -296,7 +303,7 @@ series %>%
 
 A partir do bloxplot, observamos que as notas da série 13 Reasons Why estão mais concentradas próximas a mediana. Já em The Walking Dead, possui algumas notas fora dos intervalos, tanto superiores quanto inferiores, fator que influencia na nota final das avaliações. 
 
-Outro fator que também podemos observar é o número de votos recebidos, eles cresceram ao longo das temporadas, principalmente nas últimas temporadas. No gráfico abaixo pode-se observar melhor a quantidade de votos em cada temporada.
+Outro fator que também podemos observar é o número de votos recebidos, eles cresceram ao longo das temporadas, principalmente nas últimas temporadas. No gráfico abaixo pode-se observar melhor a quantidade de votos em cada temporada. (isso pode indicar a popularidade da série)
 
 ```{r}
 series %>%  
@@ -310,7 +317,6 @@ series %>%
     labs(x = "Temporada",
          y = "Número de votos",
          title = "Distribuição do número de votos a cada temporada") +
-    
     facet_wrap(~ series_name)
 
 ```
